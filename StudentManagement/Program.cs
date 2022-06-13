@@ -1,3 +1,8 @@
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using StudentManagement.Models;
+using StudentManagement.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +11,20 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//MongoDB Services Start
+builder.Services.Configure<StudentStoreDatabaseSettings>(
+                builder.Configuration.GetSection(nameof(StudentStoreDatabaseSettings)));
+
+builder.Services.AddSingleton<IStudentStoreDatabaseSettings>(sp =>
+    sp.GetRequiredService<IOptions<StudentStoreDatabaseSettings>>().Value);
+
+//Details are in User Secret not in configuration
+builder.Services.AddSingleton<IMongoClient>(s =>
+        new MongoClient(builder.Configuration.GetValue<string>("StudentStoreDatabaseSettings:ConnectionString")));
+
+//MongoDB Services End
+builder.Services.AddScoped<IStudentService, StudentService>();
 
 var app = builder.Build();
 
